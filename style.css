@@ -12,3 +12,10 @@
 card:hover{
     transform: translateY(-10px);
 }
+.wild{
+    background-image: linear-gradient(to left, blue, green, yellow, red);
+}
+#player-hand{
+    display: flex;
+    flex-wrap: wrap;
+}

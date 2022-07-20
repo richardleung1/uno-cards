@@ -1,34 +1,33 @@
 class Card {
-    constructor(color, type){
+    constructor(color, type, text){
         this.color = color
         this.type = type
+        this.text = text
     }
 }
 
 class NumberCard extends Card {
     constructor(color, number){
-        super(color, 'number')
-        this.number = number
+        super(color, 'number', number)
     }
 }
 
 class ActionCard extends Card {
     constructor(color, action){
-        super(color, 'action')
-        this.action = action
+        super(color, 'action', action)
     }
 }
 
 class WildCard extends Card {
     constructor(action){
-        super('wild', 'wild')
-        this.action = action
+        super('wild', 'wild', action)
     }
 }
 
 class Deck {
     constructor(){
         this.activePlayer = Math.floor(Math.random() * 2)
+        this.players = []
     }
     fill() {
         this.cards = []
@@ -44,8 +43,8 @@ class Deck {
                 this.cards.push(new ActionCard(color, action))
             }
         }
-        deck.discard.push(deck.cards.splice(Math.floor(Math.random() * this.cards.length), 1))
-        const wildActions = [null, '+4']
+        deck.discard = (deck.cards.splice(Math.floor(Math.random() * this.cards.length), 1))
+        const wildActions = ["", '+4']
         for (const action of wildActions) {
             this.cards.push(new WildCard(action))
             this.cards.push(new WildCard(action))
@@ -78,60 +77,61 @@ class Player {
 }
 
 const deck = new Deck()
-const players = []
-let activePlayer
 
 function startGame() {
     deck.fill()
     deck.shuffle()
-    players.length = 0
-    players.push(new Player('player1'))
-    players.push(new Player('player2'))
+    deck.players.length = 0
+    deck.players.push(new Player('player1'))
+    deck.players.push(new Player('player2'))
     for (let i = 0; i < 7; i++) {
-        players[0].draw(deck)
-        players[1].draw(deck)
+        deck.players[0].draw(deck)
+        deck.players[1].draw(deck)
     }
-    takeTurn(deck.activePlayer)
+    cardPlayed()
+    takeTurn()
 }
 
 function switchPlayer() {
     if (deck.activePlayer = 0) {
         deck.activePlayer = 1
+        takeTurn()
     } else {
         deck.activePlayer = 0
+        takeTurn()
     }
 }
 
-function cardPlayed(topCard) {
-    console.log(topCard.type)
+function cardPlayed() {
+    let topCard = deck.discard[deck.discard.length - 1]
     let message
     if (topCard.type === 'action') {
-        if (topCard.action === 'skip') {
-            message = `${players[playerIndex].name} was skipped.`
+        if (topCard.text === 'skip') {
+            message = `${deck.players[deck.activePlayer].name} was skipped.`
             console.log(message)
             switchPlayer()
-        } else if (topCard.action === 'reverse') {
-            message = `The direction of play was reversed. ${players[playerIndex].name} was skipped.`
+        } else if (topCard.text === 'reverse') {
+            message = `The direction of play was reversed. ${deck.players[deck.activePlayer].name} was skipped.`
             console.log(message)
             switchPlayer()
-        } else if (topCard.action === '+1') {
-            message = `${players[playerIndex].name} draws one card and forfeits their turn.`
-            players[deck.activePlayer].draw(deck)
+        } else if (topCard.text === '+1') {
+            message = `${deck.players[deck.activePlayer].name} draws one card and forfeits their turn.`
+            deck.players[deck.activePlayer].draw(deck)
             console.log(message)
             switchPlayer()
         } else { 
-            message = `${players[playerIndex].name} draws two cards and forfeits their turn.`
+            message = `${deck.players[deck.activePlayer].name} draws two cards and forfeits their turn.`
             for (let i = 0; i < 2; i++) {
-                players[deck.activePlayer].draw(deck)
+                deck.players[deck.activePlayer].draw(deck)
             }
             console.log(message)
             switchPlayer()
         }
     } else if (topCard.type === 'wild') {
-        if (topCard.action === '+4') {
-            message = `${players[playerIndex].name} draws four cards and forfeits their turn.`
+        if (topCard.text === '+4') {
+            message = `${deck.players[deck.activePlayer].name} draws four cards and forfeits their turn.`
             for (let i = 0; i < 4; i++) {
-                players[deck.activePlayer].draw(deck)
+                deck.players[deck.activePlayer].draw(deck)
             }
             console.log(message)
             switchPlayer()
@@ -139,31 +139,55 @@ function cardPlayed(topCard) {
     }
 }
 
-function takeTurn(playerIndex) {
-    console.log(`It is ${players[playerIndex].name}'s turn`)
-    let topCard = deck.discard[deck.discard.length - 1]
-    console.log(topCard)
-    cardPlayed(topCard)
+function takeTurn() {
+    updateDiscard()
+    console.log(`It is ${deck.players[deck.activePlayer].name}'s turn`)
+    updatePlayer()
+    playCard()
 }
 
-function playCard(card, topCard) {
+function playCard(evt) {
+    let card = 
+    console.log(evt.target.value)
+    let topCard = deck.discard[deck.discard.length - 1]
     if (card.type === 'number') {
-        if (card.color === topCard.color || card.number === topCard.number) {
+        if (card.color === topCard.color || card.text === topCard.text) {
             deck.discard.push(card)
         } else {
             console.log('You can not play this card.')
         }
     } else if (card.type === 'action') {
-        if (card.color === topCard.color || card.action === topCard.action) {
+        if (card.color === topCard.color || card.text === topCard.text) {
             deck.discard.push(card)
         } else {
             console.log('You can not play this card.')
         }
     } else if (card.type === 'wild') {
         console.log('Choose a color')
+        deck.discard.push(card)
     }
 }
 
-
-
 startGame()
+
+function updateDiscard() {
+    let discardPile = document.querySelector('#discard')
+    let topCard = deck.discard[deck.discard.length - 1]
+    discardPile.style.backgroundColor = topCard.color
+    discardPile.textContent = topCard.text
+}
+
+function updatePlayer() {
+    let hand = document.querySelector('#player-hand')
+    let cards = deck.players[deck.activePlayer].cards
+    for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        const li = document.createElement('li')
+        li.textContent = card.text
+        li.style.backgroundColor = card.color
+        li.classList.add('card')
+        li.value = i
+        li.addEventListener('click', playCard)
+        hand.appendChild(li)
+    }
+}
